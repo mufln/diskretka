@@ -2,6 +2,7 @@ from string import ascii_lowercase
 import re
 
 s = input("Введите строку: ")
+k = int(input("Введите ключ: "))
 s.lower()
 s = re.sub(r'[^a-z]', '', s)
 print("Строка в нижнем регистре")
@@ -12,10 +13,10 @@ def caesar(s, k):
     return ''.join([ascii_lowercase[(ascii_lowercase.index(c) + k) % 26] for c in s])
 
 
-s = caesar(s, 3)
+s = caesar(s, k)
 print("\nСтрока с цезарем")
 print(s)
-s = caesar(s, -3)
+s = caesar(s, -k)
 print("Расшифрованная строка с цезарем")
 print(s)
 
