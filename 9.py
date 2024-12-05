@@ -10,15 +10,17 @@ import random
 #Дешифровать зашифрованный текст
 
 
-salt = random.randint(0, 255)
+key = random.randint(0, 255)
 
 print("Строка для шифрования")
 s = "oaoammm"
 print(s)
 
 cyphered = ""
+k = key
 for i in s:
-    cyphered += chr(ord(i)^salt)
+    k = (k**2//100)%10000
+    cyphered += chr(ord(i)^k)
 
 print("Шифрованная строка")
 print(cyphered)
@@ -26,6 +28,8 @@ print(cyphered)
 
 print("Расшифрованная строка")
 s = ""
+k = key
 for i in cyphered:
-    s += chr(ord(i)^salt)
+    k = (k**2//100)%10000
+    s += chr(ord(i)^k)
 print(s)
