@@ -19,42 +19,25 @@ def hamming_code(k):
         G[i][i] = 1
 
     H = np.zeros((r, n), dtype=int)
-    for i in range(r):
-        for j in range(n):
-            if j-k == i:
-                H[i, j] = 1
-            elif j+1>k:
-                H[i, j] = 0
-            else:
-                if r>3:
-                    H[i, j] = 1
-                else:
-                    H[i, j] = np.random.randint(0, 2)
+    count = 1
+    grades = set(2**i for i in range(100))
+    grades.union(set(2**i-1 for i in range(100)))
+    for i in range(k):
+        if i<k:
+            while count in grades:
+                count += 1
+            bin(count)[2:].zfill(r)
+            H[:,i] = [int(x) for x in bin(count)[2:].zfill(r)[::-1]]
+            count += 1
 
-    print(H)
+    for i in range(n-1, n-r-1, -1):
+        H[i-r-1,i] = 1
+
     # Проверочная матрица
     G[:, -r:] = H.transpose()[:k]
 
     return G, H, n
 
-
-def encode(message, G):
-    encoded_message = message @ G % 2
-    return encoded_message
-
-
-def syndrome(encoded_message, H):
-    syndrome_vector = encoded_message @ H.T % 2
-    return syndrome_vector
-
-
-def find_error(syndrome_vector, H):
-    error_position = None
-    for i in range(H.shape[1]):
-        if np.array_equal(syndrome_vector, H[:, i]):
-            error_position = i
-            break
-    return error_position
 
 
 def correct_error(encoded_message, error_position):
@@ -75,27 +58,33 @@ message = [int(i) for i in input("Введите информационную к
 print(f"\nИнформационная комбинация: {message}")
 
 # Кодируем сообщение методом Хемминга
-encoded_message = encode(message, G)
+encoded_message = message @ G % 2
 print(f"Закодированное сообщение: {encoded_message}")
 
 # Вносим ошибку в одно из положений
 error_position = np.random.randint(0, n)
-error_position = 2
 print(f"Внесена ошибка в разряд {error_position}")
 faulty_encoded_message = encoded_message.copy()
-faulty_encoded_message[error_position] ^= 1
+faulty_encoded_message[error_position-1] ^= 1
+print(faulty_encoded_message)
 
 # Вычисляем синдром
-syndrome_vector = syndrome(faulty_encoded_message, H)
+syndrome_vector = faulty_encoded_message @ H.transpose() % 2
 print(f"Синдром ошибки: {syndrome_vector}")
 
 # Находим положение ошибки
-detected_error_position = find_error(syndrome_vector, H)
-if detected_error_position is not None:
-    print(f"Ошибка найдена в разряде {detected_error_position}")
-else:
-    print("Ошибка не найдена")
+# detected_error_position = int(sum([i*2**j for i, j in enumerate(syndrome_vector[::-1])]))
+# if detected_error_position is not None:
+#     print(f"Ошибка найдена в разряде {detected_error_position}")
+# else:
+#     print("Ошибка не найдена")
 
 # Исправляем ошибку
-corrected_message = correct_error(faulty_encoded_message, detected_error_position)
+corrected_message = faulty_encoded_message
+faulty_col = 0
+for i in range(n):
+    if H[:, i].tolist() == syndrome_vector.tolist():
+        faulty_col = i+1
+
+corrected_message[faulty_col-1] ^= 1
 print(f"Исправленное кодовое слово: {corrected_message}")
